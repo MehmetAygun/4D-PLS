@@ -1,7 +1,7 @@
 # Tracking evaluation for SemanticKITTI
 
 This repo contains code for the paper 4D Panoptic Lidar Segmentation. 
-The code is based on the Pytoch implementation of  <a href="https://github.com/HuguesTHOMAS/KPConv-PyTorch">KPConv</a>
+The code is based on the Pytoch implementation of  <a href="https://github.com/HuguesTHOMAS/KPConv-PyTorch">KPConv</a>.
 
 
 ### Installation
