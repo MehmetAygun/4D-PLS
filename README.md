@@ -29,11 +29,16 @@ The folder structure should be as follows:
 data/SemanticKITTI/
 └── sequences/
     └── 08/
+        └── poses.txt
+        └── calib.txt
+        └── times.txt
         └── labels
             ├── 000000.label
-            ├── 000001.label
             ...
-            └── 004070.label
+         └── velodyne
+            ├── 000000.bin
+            ...
+
 ```
 
 ### Models
