@@ -153,7 +153,6 @@ if __name__ == '__main__':
     config.big_gpu = True
 
 
-    config.mixing = 'xyzt'
     ##############
     # Prepare Data
     ##############
