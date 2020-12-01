@@ -15,18 +15,21 @@ sh compile_wrappers.sh
 ```
 
 ### Data
-Create a directory `data` in main directory, download the SemanticKITTI to there with labels from  <a href="http://semantic-kitti.org/dataset.html#download/">here</a>
+Create a directory `data` in main directory, download the SemanticKitti to there with labels from  <a href="http://semantic-kitti.org/dataset.html#download/">here</a>
 
-Then create additional labels for training using utils/create_center_label.py, for testing this step is not necessary.
+Also add semantic semantic-kitti.yaml file in SemanticKitti folder, you can download the file from  <a href="https://raw.githubusercontent.com/PRBonn/semantic-kitti-api/master/config/semantic-kitti.yaml">here</a>
+
+Then create additional labels using utils/create_center_label.py,
 
 ```bash
 python create_center_label.py
 ```
 
-The folder structure should be as follows:
+The data folder structure should be as follows:
 
 ```bash
-data/SemanticKITTI/
+data/SemanticKitti/
+└── semantic-kitti.yaml
 └── sequences/
     └── 08/
         └── poses.txt
