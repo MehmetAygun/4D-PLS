@@ -151,6 +151,12 @@ if __name__ == '__main__':
     if config.n_frames < config.n_test_frames:
         config.n_frames = config.n_test_frames
     config.big_gpu = True
+    config.dataset_task = '4d_panoptic'
+    #config.sampling = 'density'
+    config.sampling = 'importance'
+    config.decay_sampling = 'None'
+    config.stride = 1
+    config.first_subsampling_dl = 0.061
 
 
     ##############
@@ -212,13 +218,7 @@ if __name__ == '__main__':
     print('\nStart test')
     print('**********\n')
 
-    config.dataset_task = '4d_panoptic'
-    #config.sampling = 'density'
-    config.sampling = 'importance'
-    config.decay_sampling = 'None'
-    config.stride = 1
-
-
+    
     # Training
     if config.dataset_task == 'classification':
         a = 1/0

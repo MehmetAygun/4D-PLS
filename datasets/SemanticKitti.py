@@ -378,9 +378,7 @@ class SemanticKittiDataset(PointCloudDataset):
                         pass
 
                 if self.set in ['validation', 'test'] and self.config.n_test_frames > 1 and f_inc > 0:
-                    test_path = join('test',
-                                     self.config.saving_path.split('/')[-1] + '_' + self.config.assoc_saving + str(
-                                         self.config.n_test_frames))
+                    test_path = join('test', self.config.saving_path.split('/')[-1] + str(self.config.n_test_frames))
                     if self.set == 'validation':
                         test_path = join(test_path, 'val_probs')
                     else:
@@ -396,7 +394,6 @@ class SemanticKittiDataset(PointCloudDataset):
                             try:
                                 label_pred = np.load(file_path)
                             except:
-                                time.sleep(2)
                                 print ('label cannot be read {}'.format(file_path))
                                 counter +=1
                                 if counter > 5:
@@ -415,7 +412,6 @@ class SemanticKittiDataset(PointCloudDataset):
                                 center_pred = np.load(file_path)
                             except:
                                 time.sleep(2)
-                                print ('label cannot be read {}'.format(file_path))
                                 counter +=1
                                 if counter > 5:
                                     break
