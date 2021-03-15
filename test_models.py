@@ -218,7 +218,7 @@ if __name__ == '__main__':
     print('\nStart test')
     print('**********\n')
     
-    config.dataset_task == '4d_panoptic'
+    config.dataset_task = '4d_panoptic'
     
     # Training
     if config.dataset_task == 'classification':
