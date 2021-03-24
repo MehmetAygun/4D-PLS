@@ -75,3 +75,12 @@ To generate long tracks using small 4D volumes use `stitch_tracklets.py`
 python stitch_tracklets.py --predictions test/model_dir --n_test_frames 4
 ```
 This code will generate predictions in the format of SemanticKITTI under test/model_dir/stitch .
+
+### Evaluation
+
+For getting the metrics introduced in the paper, use utils/evaluate_4dpanoptic.py
+
+```bash
+python evaluate_4dpanoptic.py --dataset=SemanticKITTI_dir --predictions=output_of_stitch_tracket_dir --data_cfg=semantic-kitti.yaml
+```
+
