@@ -191,14 +191,14 @@ if __name__ == '__main__':
   things_iou = iou[1:9].mean()
   stuff_iou = iou[9:].mean()
   print ("=== Results ===")
-  print ("PQ4D:", PQ4D)
-  print("AQ_overall:", AQ_ovr)
+  print ("PLS:", PQ4D)
+  print("S_assoc:", AQ_ovr)
   float_formatter = "{:.2f}".format
   np.set_printoptions(formatter={'float_kind': float_formatter})
-  print ("AQ:", AQ)
+  print ("Assoc:", AQ)
   print ("iou:", iou)
   print("things_iou:", things_iou)
   print("stuff_iou:", stuff_iou)
 
-  print ("iou_mean:", iou_mean)
+  print ("S_cls:", iou_mean)
 
