@@ -1,8 +1,11 @@
-# Tracking evaluation for SemanticKITTI
+# 4D Panoptic Lidar Segmentation
+
+<img width="720" alt="4dmain" src="https://user-images.githubusercontent.com/5329637/124156220-077a2500-daa0-11eb-8d59-6dd5c1455500.png">
+
+<a href="https://mehmetaygun.github.io/4DPLS.html">Project Website with Demo Video</a>.
 
 This repo contains code for the paper 4D Panoptic Lidar Segmentation. 
 The code is based on the Pytoch implementation of  <a href="https://github.com/HuguesTHOMAS/KPConv-PyTorch">KPConv</a>.
-
 
 ### Installation
 
@@ -83,4 +86,14 @@ For getting the metrics introduced in the paper, use utils/evaluate_4dpanoptic.p
 ```bash
 python evaluate_4dpanoptic.py --dataset=SemanticKITTI_dir --predictions=output_of_stitch_tracket_dir --data_cfg=semantic-kitti.yaml
 ```
+### Citing
+If you find the code useful in your research, please consider citing:
 
+	@InProceedings{aygun20214d,
+	    author    = {Aygun, Mehmet and Osep, Aljosa and Weber, Mark and Maximov, Maxim and Stachniss, Cyrill and Behley, Jens and Leal-Taixe, Laura},
+	    title     = {4D Panoptic LiDAR Segmentation},
+	    booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+	    month     = {June},
+	    year      = {2021},
+	    pages     = {5527-5537}
+	}
