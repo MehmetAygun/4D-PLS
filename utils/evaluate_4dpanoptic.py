@@ -28,7 +28,7 @@ if __name__ == '__main__':
       '--predictions',
       '-p',
       type=str,
-      required=None,
+      required=False,
       help='Prediction dir. Same organization as dataset, but predictions in'
       'each sequences "prediction" directory. No Default. If no option is set'
       ' we look for the labels in the same directory as dataset')
@@ -170,7 +170,6 @@ if __name__ == '__main__':
     u_label_inst = label >> 16
     if FLAGS.limit is not None:
       u_label_sem_class = u_label_sem_class[:FLAGS.limit]
-      u_label_sem_cat = u_label_sem_cat[:FLAGS.limit]
       u_label_inst = u_label_inst[:FLAGS.limit]
 
     label = np.fromfile(pred_file, dtype=np.uint32)
@@ -179,7 +178,6 @@ if __name__ == '__main__':
     u_pred_inst = label >> 16
     if FLAGS.limit is not None:
       u_pred_sem_class = u_pred_sem_class[:FLAGS.limit]
-      u_pred_sem_cat = u_pred_sem_cat[:FLAGS.limit]
       u_pred_inst = u_pred_inst[:FLAGS.limit]
 
     class_evaluator.addBatch(label_file.split('/')[-3], u_pred_sem_class, u_pred_inst, u_label_sem_class, u_label_inst)
@@ -187,18 +185,18 @@ if __name__ == '__main__':
   print("100%")
 
   complete_time = time.time() - start_time
-  PQ4D, AQ_ovr, AQ, AQ_p, AQ_r,  iou, iou_mean, iou_p, iou_r = class_evaluator.getPQ4D()
+  LSTQ, LAQ_ovr, LAQ, AQ_p, AQ_r,  iou, iou_mean, iou_p, iou_r = class_evaluator.getPQ4D()
   things_iou = iou[1:9].mean()
   stuff_iou = iou[9:].mean()
   print ("=== Results ===")
-  print ("PLS:", PQ4D)
-  print("S_assoc:", AQ_ovr)
+  print ("LSTQ:", LSTQ)
+  print("S_assoc (LAQ):", LAQ_ovr)
   float_formatter = "{:.2f}".format
   np.set_printoptions(formatter={'float_kind': float_formatter})
-  print ("Assoc:", AQ)
+  print ("Assoc:", LAQ)
   print ("iou:", iou)
   print("things_iou:", things_iou)
   print("stuff_iou:", stuff_iou)
 
-  print ("S_cls:", iou_mean)
+  print ("S_cls (LSQ):", iou_mean)
 

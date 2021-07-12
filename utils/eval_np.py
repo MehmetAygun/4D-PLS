@@ -334,7 +334,7 @@ class Panoptic4DEval:
       unique_gt, counts_gt = np.unique(y_inst_in_cl[y_inst_in_cl > 0], return_counts=True)
       self.update_dict_stat(cl_gts, unique_gt[counts_gt>self.min_points], counts_gt[counts_gt>self.min_points])
 
-      valid_combos_min_point = np.zeros_like(y_inst_in_cl)  # instances which have at least self.min points
+      valid_combos_min_point = np.zeros_like(y_inst_in_cl)  # instances which have more than self.min points
       for valid_id in unique_gt[counts_gt > self.min_points]:
         valid_combos_min_point = np.logical_or(valid_combos_min_point, y_inst_in_cl == valid_id)
 
@@ -364,11 +364,9 @@ class Panoptic4DEval:
         cl_preds = self.preds[seq]
         cl_gts = self.gts[seq][cl]
         cl_intersects = self.intersects[seq][cl]
-        outer_sum = 0.0
         outer_sum_iou = 0.0
         num_tubes[cl] += len(cl_gts)
         for gt_id, gt_size in cl_gts.items():
-          inner_sum = 0.0
           inner_sum_iou = 0.0
           for pr_id, pr_size in cl_preds.items():
             # TODO: pay attention for zero intersection!
@@ -441,4 +439,11 @@ if __name__ == "__main__":
   # evaluator
   class_evaluator = Panoptic4DEval(3, None, ignore, offset = 2 ** 32, min_points=1)
   class_evaluator.addBatch(1, sem_pred, inst_pred, sem_gt, inst_gt)
-  PQ4D, AQ_ovr, AQ, iou, iou_mean = class_evaluator.getPQ4D()
+  PQ4D, AQ_ovr, AQ, AQ_p, AQ_r, iou, iou_mean, iou_p, iou_r = class_evaluator.getPQ4D()
+  np.testing.assert_equal(PQ4D, np.sqrt(1.0/3))
+  np.testing.assert_equal(AQ_ovr, 2.0/3)
+  np.testing.assert_equal(AQ, [0, 1.0, 0.5])
+  np.testing.assert_equal(AQ_p, 2.0/3)
+  np.testing.assert_equal(AQ_r, 1.0)
+  np.testing.assert_equal(iou, [0, 0.5, 0.5])
+  np.testing.assert_equal(iou_mean, 0.5)
