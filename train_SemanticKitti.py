@@ -158,7 +158,7 @@ class SemanticKittiConfig(Config):
     max_epoch = 1000
 
     # Learning rate management
-    learning_rate = 1e-4
+    learning_rate = 1e-2
     momentum = 0.98
     lr_decays = {i: 0.1 ** (1 / 200) for i in range(1, max_epoch)}
     grad_clip_norm = 100.0
@@ -264,7 +264,7 @@ if __name__ == '__main__':
     if previous_training_path:
         config.load(os.path.join('results', previous_training_path))
         config.saving_path = None
-    config.learning_rate = 0.0
+    config.learning_rate = 1e-2 #after pretraining change to 1e-3 
     config.pre_train = False
     config.free_dim = 4
     config.n_frames = 2
