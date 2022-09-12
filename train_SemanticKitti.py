@@ -264,7 +264,7 @@ if __name__ == '__main__':
     if previous_training_path:
         config.load(os.path.join('results', previous_training_path))
         config.saving_path = None
-    config.learning_rate = 1e-2 #after pretraining change to 1e-3 
+    config.learning_rate = 1e-2 #after pretraining change to 1e-4 
     config.pre_train = False
     config.free_dim = 4
     config.n_frames = 4
