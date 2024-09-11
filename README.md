@@ -86,6 +86,10 @@ For getting the metrics introduced in the paper, use utils/evaluate_4dpanoptic.p
 ```bash
 python evaluate_4dpanoptic.py --dataset=SemanticKITTI_dir --predictions=output_of_stitch_tracket_dir --data_cfg=semantic-kitti.yaml
 ```
+
+**Warning**: please check [this issue](https://github.com/MehmetAygun/4D-PLS/issues/17) to get the correct numbers for the evaluation. 
+(You shouldn't predict any ignore labels)
+
 ### Citing
 If you find the code useful in your research, please consider citing:
 
