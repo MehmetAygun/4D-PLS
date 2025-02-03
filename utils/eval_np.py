@@ -220,7 +220,6 @@ class Panoptic4DEval:
     self.preds = {}
     self.gts = {}
     self.intersects = {}
-    self.intersects_ovr = {}
 
     # Per-class association quality collect here
     self.pan_aq = np.zeros(self.n_classes, dtype=np.double)
@@ -289,19 +288,22 @@ class Panoptic4DEval:
       else:
         stat_dict[uniqueid] = counts
 
+  def makeGloballyUniqueInstanceIds(self, sem_labels, inst_labels):
+      non_instance_mask = inst_labels == 0
+      global_inst_labels = (sem_labels << 16) + inst_labels
+      global_inst_labels[non_instance_mask] = 0
+      return global_inst_labels
+
   def addBatchPanoptic4D(self, seq, x_sem_row, x_inst_row, y_sem_row, y_inst_row):
+    # first convert the gt instance labels to globally unique instance labels
+    y_inst_row = self.makeGloballyUniqueInstanceIds(y_sem_row, y_inst_row)
 
     #start = time.time()
     if seq not in self.sequences:
       self.sequences.append(seq)
       self.preds[seq] = {}
-      self.gts[seq] = [{} for i in range(self.n_classes)]
-      self.intersects[seq] = [{} for i in range(self.n_classes)]
-      self.intersects_ovr[seq] = [{} for i in range(self.n_classes)]
-
-    # make sure instances are not zeros (it messes with my approach)
-    x_inst_row = x_inst_row + 1
-    y_inst_row = y_inst_row + 1
+      self.gts[seq] = {}
+      self.intersects[seq] = {}
 
     # only interested in points that are outside the void area (not in excluded classes)
     for cl in self.ignore:
@@ -313,82 +315,79 @@ class Panoptic4DEval:
       x_inst_row = x_inst_row[gt_not_in_excl_mask]
       y_inst_row = y_inst_row[gt_not_in_excl_mask]
 
-    for cl in self.include:
-      # print("*"*80)
-      # print("CLASS", cl.item())
+    # Per-class accumulated stats
+    preds = self.preds[seq]
+    gts = self.gts[seq]
+    intersects = self.intersects[seq]
 
-      # Per-class accumulated stats
-      cl_preds = self.preds[seq]
-      cl_gts = self.gts[seq][cl]
-      cl_intersects = self.intersects[seq][cl]
+    # generate the areas for each unique instance gt_np (i.e., set2)
+    unique_gt, counts_gt = np.unique(y_inst_row[y_inst_row > 0], return_counts=True)
 
-      # get a binary class mask (filter acc. to semantic class!)
-      x_inst_in_cl_mask = x_sem_row == cl
-      y_inst_in_cl_mask = y_sem_row == cl
+    # generate ignore mask for the gt instances that have no more than self.min points
+    mask_gt_ignored_point = np.zeros_like(y_inst_row)
+    for valid_id in unique_gt[counts_gt <= self.min_points]:
+        mask_gt_ignored_point = np.logical_or(
+            mask_gt_ignored_point, y_inst_row == valid_id
+        )
 
-      # get instance points in class (mask-out everything but _this_ class)
-      x_inst_in_cl = x_inst_row * x_inst_in_cl_mask.astype(np.int64)
-      y_inst_in_cl = y_inst_row * y_inst_in_cl_mask.astype(np.int64)
+    # remove the ignored points, just like what we did for classes in self.ignore
+    y_inst_row = y_inst_row[np.logical_not(mask_gt_ignored_point)]
+    x_inst_row = x_inst_row[np.logical_not(mask_gt_ignored_point)]
 
-      # generate the areas for each unique instance gt_np (i.e., set2)
-      unique_gt, counts_gt = np.unique(y_inst_in_cl[y_inst_in_cl > 0], return_counts=True)
-      self.update_dict_stat(cl_gts, unique_gt[counts_gt>self.min_points], counts_gt[counts_gt>self.min_points])
+    # for the clarity, re-count the gt unique instances
+    unique_gt, counts_gt = np.unique(y_inst_row[y_inst_row > 0], return_counts=True)
+    # record gt instances
+    self.update_dict_stat(gts, unique_gt, counts_gt)
 
-      valid_combos_min_point = np.zeros_like(y_inst_in_cl)  # instances which have more than self.min points
-      for valid_id in unique_gt[counts_gt > self.min_points]:
-        valid_combos_min_point = np.logical_or(valid_combos_min_point, y_inst_in_cl == valid_id)
+    # generate the areas for each unique instance prediction (i.e., set1)
+    unique_pred, counts_pred = np.unique(
+        x_inst_row[x_inst_row > 0], return_counts=True
+    )
+    # record prediction instances
+    self.update_dict_stat(preds, unique_pred, counts_pred)
 
-      y_inst_in_cl = y_inst_in_cl * valid_combos_min_point
-      # generate the areas for each unique instance prediction (i.e., set1)
-      unique_pred, counts_pred = np.unique(x_inst_in_cl[x_inst_in_cl > 0], return_counts=True)
+    valid_combos = np.logical_and(
+        x_inst_row > 0, y_inst_row > 0
+    )  # Convert to boolean and do logical and, based on semantics
 
-      # is there better way to do this?
-      self.update_dict_stat(cl_preds, unique_pred, counts_pred)
+    # generate intersection using offset
+    offset_combo = x_inst_row[valid_combos] + self.offset * y_inst_row[valid_combos]
+    unique_combo, counts_combo = np.unique(offset_combo, return_counts=True)
 
-      valid_combos = np.logical_and(x_inst_row > 0,
-                                    y_inst_in_cl > 0)  # Convert to boolean and do logical and, based on semantics
-
-      # generate intersection using offset
-      offset_combo = x_inst_row[valid_combos] + self.offset * y_inst_in_cl[valid_combos]
-      unique_combo, counts_combo = np.unique(offset_combo, return_counts=True)
-
-      self.update_dict_stat(cl_intersects, unique_combo, counts_combo)
+    self.update_dict_stat(intersects, unique_combo, counts_combo)
 
 
   def getPQ4D(self):
     precs = []
     recalls = []
-    num_tubes = [0] * self.n_classes
+    num_tubes = 0
     for seq in self.sequences:
-      for cl in self.include:
-        cl_preds = self.preds[seq]
-        cl_gts = self.gts[seq][cl]
-        cl_intersects = self.intersects[seq][cl]
-        outer_sum_iou = 0.0
-        num_tubes[cl] += len(cl_gts)
-        for gt_id, gt_size in cl_gts.items():
-          inner_sum_iou = 0.0
-          for pr_id, pr_size in cl_preds.items():
-            # TODO: pay attention for zero intersection!
-            TPA_key =  pr_id + self.offset * gt_id
-            if TPA_key in cl_intersects:
-              TPA = cl_intersects[TPA_key]
-              Prec = TPA / float(pr_size) # TODO I dont think these can ever be zero, but double check
-              Recall = TPA / float(gt_size)
-              precs.append(Prec)
-              recalls.append(Recall)
-              TPA_ovr = self.intersects[seq][cl][TPA_key]
-              inner_sum_iou += TPA_ovr * (TPA_ovr / (gt_size + pr_size - TPA_ovr))
-              if Prec > 1.0 or Recall >1.0:
-                print ('something wrong !!')
-          outer_sum_iou += 1.0 / float(gt_size) * float(inner_sum_iou)
-        self.pan_aq[cl] += outer_sum_iou # 1.0/float(len(cl_gts)) # Normalize by #tubes
-        self.pan_aq_ovr += outer_sum_iou
+      preds = self.preds[seq]
+      gts = self.gts[seq]
+      intersects = self.intersects[seq]
+      outer_sum_iou = 0.0
+      num_tubes += len(gts)
+      for gt_id, gt_size in gts.items():
+        inner_sum_iou = 0.0
+        for pr_id, pr_size in preds.items():
+          # TODO: pay attention for zero intersection!
+          TPA_key =  pr_id + self.offset * gt_id
+          if TPA_key in intersects:
+            TPA = intersects[TPA_key]
+            Prec = TPA / float(pr_size) # TODO I dont think these can ever be zero, but double check
+            Recall = TPA / float(gt_size)
+            precs.append(Prec)
+            recalls.append(Recall)
+            TPA_ovr = self.intersects[seq][TPA_key]
+            inner_sum_iou += TPA_ovr * (TPA_ovr / (gt_size + pr_size - TPA_ovr))
+            if Prec > 1.0 or Recall >1.0:
+              print ('something wrong !!')
+        outer_sum_iou += 1.0 / float(gt_size) * float(inner_sum_iou)
+      self.pan_aq_ovr += outer_sum_iou
     # ==========
 
     #print ('num tubes:', len(list(cl_preds.items())))
-    AQ_overall = np.sum(self.pan_aq_ovr)/ np.sum(num_tubes[1:9])
-    AQ = self.pan_aq / np.maximum(num_tubes, self.eps)
+    AQ_overall = np.sum(self.pan_aq_ovr)/ num_tubes
 
     iou_mean, iou, iou_p, iou_r = self.getSemIoU()
 
@@ -396,7 +395,7 @@ class Panoptic4DEval:
     AQ_r = np.mean(recalls)
 
     PQ4D =  math.sqrt(AQ_overall*iou_mean)
-    return PQ4D, AQ_overall, AQ, AQ_p, AQ_r,  iou, iou_mean, iou_p, iou_r
+    return PQ4D, AQ_overall, AQ_p, AQ_r,  iou, iou_mean, iou_p, iou_r
 
 
   #############################  Panoptic STUFF ################################

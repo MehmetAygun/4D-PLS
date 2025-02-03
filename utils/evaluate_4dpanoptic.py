@@ -185,7 +185,7 @@ if __name__ == '__main__':
   print("100%")
 
   complete_time = time.time() - start_time
-  LSTQ, LAQ_ovr, LAQ, AQ_p, AQ_r,  iou, iou_mean, iou_p, iou_r = class_evaluator.getPQ4D()
+  LSTQ, LAQ_ovr, AQ_p, AQ_r,  iou, iou_mean, iou_p, iou_r = class_evaluator.getPQ4D()
   things_iou = iou[1:9].mean()
   stuff_iou = iou[9:].mean()
   print ("=== Results ===")
@@ -193,7 +193,6 @@ if __name__ == '__main__':
   print("S_assoc (LAQ):", LAQ_ovr)
   float_formatter = "{:.2f}".format
   np.set_printoptions(formatter={'float_kind': float_formatter})
-  print ("Assoc:", LAQ)
   print ("iou:", iou)
   print("things_iou:", things_iou)
   print("stuff_iou:", stuff_iou)
